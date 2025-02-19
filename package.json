@@ -4,10 +4,9 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "start": "tsc && node dist/handler.js",
+    "start": "tsc && node dist/harness.js",
     "build": "tsc",
-    "test": "jest",
-    "package_updater": "node dist/package_updater.js"
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",

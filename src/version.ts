@@ -4,7 +4,6 @@ export class Version {
     patch: number;
 
     constructor(version: string){
-        console.log("Version:", version);
         version=version.replace("^", "");
         const parts = version.split(".");
         if (parts.length !== 3){

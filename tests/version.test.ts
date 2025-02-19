@@ -1,4 +1,4 @@
-import { Version } from "./version.js";
+import { Version } from "../src/version";
 
 describe("Version Constructor", () => {
     it("should correctly parse valid version strings", () => {

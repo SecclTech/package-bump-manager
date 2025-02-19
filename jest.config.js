@@ -5,7 +5,7 @@ export default {
     "^.+.tsx?$": ["ts-jest",{}],
   },
   preset: 'ts-jest',
-  roots: ['<rootDir>/src'],
+  roots: ['<rootDir>/tests'],
   testMatch: ['**/?(*.)+(spec|test).ts'],
   moduleFileExtensions: ['ts', 'js', 'json'],
 };
