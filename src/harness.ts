@@ -1,7 +1,9 @@
 import { Context } from 'aws-lambda';
 import { handler } from './index.js';
 
-const events = {};
+const events = {
+  request_type: 'store_dependancy',
+};
 const context: Context = {
     callbackWaitsForEmptyEventLoop: false,
     functionName: '',
@@ -11,18 +13,10 @@ const context: Context = {
     awsRequestId: '',
     logGroupName: '',
     logStreamName: '',
-    getRemainingTimeInMillis: function(): number {
-        throw new Error('Function not implemented.');
-    },
-    done: function(error?: Error, result?: any): void {
-        throw new Error('Function not implemented.');
-    },
-    fail: function(error: Error | string): void {
-        throw new Error('Function not implemented.');
-    },
-    succeed: function(messageOrObject: any): void {
-        throw new Error('Function not implemented.');
-    }
+    getRemainingTimeInMillis: function(): number { return 0; },
+    done: function(error?: Error, result?: any): void {},
+    fail: function(error: Error | string): void {},
+    succeed: function(messageOrObject: any): void {}
 };
 
 handler(events, context);
