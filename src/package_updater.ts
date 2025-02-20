@@ -1,5 +1,5 @@
 import { Version } from "./version.js";
-import { GithubPRCreator } from "./github_pr_creator.js";
+import { PRCreator } from "./github.js";
 import { PackageBuilder } from "./package_builder.js";
 
 type Package = {
@@ -11,12 +11,12 @@ type Package = {
 
 class PackageUpdater {
   private owner: string;
-  private packageUpdater: GithubPRCreator;
+  private packageUpdater: PRCreator;
   private packageBuilder: PackageBuilder;
 
   constructor(owner: string) {
     this.owner = owner;
-    this.packageUpdater = new GithubPRCreator();
+    this.packageUpdater = new PRCreator();
     this.packageBuilder = new PackageBuilder();
   }
 

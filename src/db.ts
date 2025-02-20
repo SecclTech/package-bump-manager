@@ -1,6 +1,6 @@
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 
-class DependencyStore {
+export default class DependencyStore {
   private dynamodbClient: DynamoDBClient;
   private tableName: string;
 
@@ -32,17 +32,20 @@ class DependencyStore {
 
       return {
         statusCode: 200,
-        body: JSON.stringify({ message: `Successfully stored dependencies for repository '${repoName}' in DynamoDB` })
+        body: JSON.stringify({
+          message: `Successfully stored dependencies for repository '${repoName}' in DynamoDB`
+        })
       };
 
     } catch (error) {
       console.error("Error: Error storing dependency information - ", error);
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" })
+        body: JSON.stringify({
+          error: error instanceof Error ? error.message : "Unknown error"
+        })
       };
     }
   }
 }
 
-export default DependencyStore;

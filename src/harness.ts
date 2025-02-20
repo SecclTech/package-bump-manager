@@ -19,5 +19,5 @@ const context: Context = {
   succeed: function(messageOrObject: any): void { }
 };
 
-handler(events, context);
+handler(events, context).then(res => console.log(res));
 

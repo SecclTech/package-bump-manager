@@ -1,5 +1,5 @@
 import { APIGatewayProxyResult, Context } from "aws-lambda";
-import DependencyStore from "./dependancy_store.js";
+import DependencyStore from "./db.js";
 import PackageUpdater from "./package_updater.js";
 
 const DYNAMODB_TABLE = "RepoDependancies";
@@ -10,8 +10,6 @@ export const handler = async (
   _context: Context
 ): Promise<APIGatewayProxyResult> => {
   try {
-    console.log("Received event:", event);
-
     if (!event.request_type) {
       return {
         statusCode: 400,
@@ -20,6 +18,8 @@ export const handler = async (
         })
       };
     }
+
+    console.log("Received event:", event.request_type);
 
     switch (event.request_type) {
       case "store_dependancy": {
@@ -40,7 +40,6 @@ export const handler = async (
     }
 
   } catch (error) {
-    console.error("Error:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({

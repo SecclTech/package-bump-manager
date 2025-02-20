@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { createAppAuth } from "@octokit/auth-app";
 
-export class GithubPRCreator {
+export class PRCreator {
   private octokit: Octokit;
 
   constructor() {
