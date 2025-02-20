@@ -1,22 +1,22 @@
 import { Version } from "../src/version";
 
 describe("Version Constructor", () => {
-    it("should correctly parse valid version strings", () => {
-        const version = new Version("1.2.3");
-        expect(version.major).toBe(1);
-        expect(version.minor).toBe(2);
-        expect(version.patch).toBe(3);
-    });
+  it("should correctly parse valid version strings", () => {
+    const version = new Version("1.2.3");
+    expect(version.major).toBe(1);
+    expect(version.minor).toBe(2);
+    expect(version.patch).toBe(3);
+  });
 
-    it("should throw an error for invalid version format", () => {
-        expect(() => new Version("1.2")).toThrow("Invalid version format. Version must be 'major.minor.patch'");
-        expect(() => new Version("1.2.3.4")).toThrow("Invalid version format. Version must be 'major.minor.patch'");
-    });
+  it("should throw an error for invalid version format", () => {
+    expect(() => new Version("1.2")).toThrow("Invalid version format. Version must be 'major.minor.patch'");
+    expect(() => new Version("1.2.3.4")).toThrow("Invalid version format. Version must be 'major.minor.patch'");
+  });
 
-    it("should throw an error for non-numeric version parts", () => {
-        expect(() => new Version("1.2.x")).toThrow("Invalid value in version: x");
-        expect(() => new Version("1.a.3")).toThrow("Invalid value in version: a");
-    });
+  it("should throw an error for non-numeric version parts", () => {
+    expect(() => new Version("1.2.x")).toThrow("Invalid value in version: x");
+    expect(() => new Version("1.a.3")).toThrow("Invalid value in version: a");
+  });
 });
 
 

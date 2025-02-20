@@ -23,7 +23,7 @@ export class PackageBuilder {
 
     try {
       const result: ScanCommandOutput = await this.client.send(scanCommand);
-      
+
       const pkgs: Package[] = result.Items?.map(item => {
         return {
           package_name: item["package_name"]?.S || "",
@@ -34,7 +34,7 @@ export class PackageBuilder {
       }) || [];
 
       return pkgs;
-      
+
     } catch (error) {
       console.error("Error fetching data from DynamoDB:", error);
       throw new Error("Failed to fetch data from DynamoDB");

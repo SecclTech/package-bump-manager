@@ -24,7 +24,7 @@ class PackageUpdater {
     return packages.filter((pkg) => {
       const depVersion = pkg.dependencies[name] ? new Version(pkg.dependencies[name]) : null;
       const devDepVersion = pkg.dev_dependencies[name] ? new Version(pkg.dev_dependencies[name]) : null;
-  
+
       return (
         (depVersion && version.greaterThan(depVersion)) ||
         (devDepVersion && version.greaterThan(devDepVersion))
