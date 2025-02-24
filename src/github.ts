@@ -11,6 +11,7 @@ import { createAppAuth } from "@octokit/auth-app";
 
 export class PRCreator {
   #octokit: Octokit;
+  // TODO: Avoid collisions
   #localPath = "/tmp/";
   #paths = ["package.json", "package-lock.json"];
 
@@ -24,8 +25,6 @@ export class PRCreator {
         installationId: APP_INSTALLATION_ID,
       },
     });
-    // TODO: Avoid collisions
-
   }
 
   private async getFiles(owner: string, repo: string, branch: string) {
@@ -59,6 +58,7 @@ export class PRCreator {
   }
 
   private async updatePackageJson(packageName: string, newVersion: string) {
+    // TODO: run npm bump on new branch
     await runCommand(`cd ${this.#localPath} && \\` +
       `npm install \\` +
       `${packageName}@${newVersion} \\` +
@@ -91,7 +91,7 @@ export class PRCreator {
         path,
         mode: "100644",
         type: "blob",
-        content: buf.toString("base64"),
+        content: buf.toString(),
       }))
     })
 
@@ -103,6 +103,7 @@ export class PRCreator {
       parents: [latestCommitSha],
     })
 
+    console.log(branch, newCommit.sha)
     await this.#octokit.git.updateRef({
       owner,
       repo,
@@ -111,20 +112,48 @@ export class PRCreator {
       force: false
     })
   }
-  //
-  // private async createPR(owner: string, repo: string, branchName: string, title: string, defaultBranch: string, body: string) {
-  //   // TODO: Assignee
-  //   const { data: { html_url } } = await this.#octokit.pulls.create({
-  //     owner,
-  //     repo,
-  //     title,
-  //     head: branchName,
-  //     base: defaultBranch,
-  //     body,
-  //   });
-  //
-  //   return html_url;
-  // }
+
+  private async createPR(
+    owner: string,
+    repo: string,
+    branch: string,
+    title: string,
+    defaultBranch: string,
+    body: string
+  ) {
+    const { data: prs } = await this.#octokit.pulls.list({
+      owner,
+      repo,
+      state: "open",
+      head: `${owner}:${branch}`,
+      base: defaultBranch,
+    });
+
+    if (prs.length === 0) {
+      console.log("Creating PR")
+      // TODO: Assignee
+      console.log(defaultBranch, branch)
+      const { data: { html_url } } = await this.#octokit.pulls.create({
+        owner,
+        repo,
+        title,
+        head: branch,
+        base: defaultBranch,
+        body,
+      });
+      return html_url;
+    }
+
+    // TODO: Update with correct information
+    await this.#octokit.pulls.update({
+      owner,
+      repo,
+      pull_number: prs[0].number,
+      body: prs[0].body + "\n more stuff"
+    });
+
+    return prs[0].html_url;
+  }
 
   private async getDefaultBranch(owner: string, repo: string) {
     const { data: { default_branch } } = await this.#octokit.repos.get({
@@ -138,7 +167,10 @@ export class PRCreator {
       branch: default_branch
     });
 
-    return sha
+    return {
+      name: default_branch,
+      sha
+    };
   }
 
   private async getOrCreateBranch(owner: string, repo: string, branch: string, defaultBranchSha: string) {
@@ -151,7 +183,9 @@ export class PRCreator {
       return data.commit.sha;
     } catch (error) {
       if ((error as RequestError).status === 404) {
-        await this.#octokit.git.createRef({ owner, repo, ref: `refs/heads/${branch}`, sha: defaultBranchSha})
+        await this.#octokit.git.createRef({
+          owner, repo, ref: `refs/heads/${branch}`, sha: defaultBranchSha
+        })
       }
       return defaultBranchSha;
     }
@@ -166,28 +200,28 @@ export class PRCreator {
     const body = `This PR updates ${packageName} to version ${newVersion}.`
     const commitMessage = `update ${packageName} to ${newVersion}`
 
-    const defaultBranchSha = await this.getDefaultBranch(owner, repo);
-    const sha  = await this.getOrCreateBranch(owner, repo, branch, defaultBranchSha);
+    const defaultBranch = await this.getDefaultBranch(owner, repo);
+    const latestCommitSha = await this.getOrCreateBranch(owner, repo, branch, defaultBranch.sha);
 
     await this.getFiles(owner, repo, branch);
     await this.updatePackageJson(packageName, newVersion);
-    await this.commitFiles(owner, repo, sha, branch, defaultBranchSha, commitMessage);
+    // TODO: Do not push if no changes
+    await this.commitFiles(
+      owner, repo, branch, defaultBranch.sha, latestCommitSha, commitMessage
+    );
 
-    return title
+    return await this.createPR(
+      owner, repo, branch, title, defaultBranch.name, body
+    );
   }
 }
 
 async function runCommand(command: string) {
-  try {
-    const { stdout, stderr } = await exec(command);
-    if (stderr) {
-      console.error(`stderr: ${stderr}`);
-    }
-    console.log(`stdout: \n${stdout}`);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`Error executing ${command}: ${errorMessage}`);
+  const { stdout, stderr } = await exec(command);
+  if (stderr) {
+    console.error(`stderr: ${stderr}`);
   }
+  console.log(`stdout: \n${stdout}`);
 }
 
 const gh = new PRCreator();
