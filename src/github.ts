@@ -26,7 +26,7 @@ export class PRCreator {
     this.localPath = "/tmp/";
   }
 
-  private async fetchPackageJson(owner: string, repo: string) {
+  private async getFiles(owner: string, repo: string, branch: string) {
     const paths = ["package.json", "package-lock.json"];
 
     const responsePromises = await Promise.all(paths.map(path =>
@@ -34,6 +34,7 @@ export class PRCreator {
         owner,
         repo,
         path,
+        ref: branch,
       })
     ));
 
@@ -68,25 +69,13 @@ export class PRCreator {
       "--package-lock-only \\");
   }
 
-  private async createBranch(
+  private async commitFiles(
     owner: string,
     repo: string,
     branchName: string,
     commitMessage: string,
-    latestSha: string,
     files: { sha: string; path: string; }[]
   ) {
-
-    try {
-      await this.octokit.git.createRef({
-        owner,
-        repo,
-        ref: `refs/heads/${branchName}`,
-        sha: latestSha,
-      });
-    } catch {
-      console.log("Failed to create branch, it probably already exists");
-    }
 
     const readOperations = files.map(async ({ path, sha }) =>
     ({
@@ -145,6 +134,24 @@ export class PRCreator {
     }
   }
 
+  private async createBranch(owner: string, repo: string, branchName: string, latestSha: string) {
+
+    try {
+      await this.octokit.git.getRef({
+        owner,
+        repo,
+        ref: `heads/${branchName}`,
+      });
+    } catch {
+      await this.octokit.git.createRef({
+        owner,
+        repo,
+        ref: `refs/heads/${branchName}`,
+        sha: latestSha,
+      });
+    }
+  }
+
   async createPackageUpdatePR({ owner, repo, packageName, newVersion }: { owner: string; repo: string; packageName: string; newVersion: string; }) {
 
     // TODO: Add Jira ticket number
@@ -155,14 +162,16 @@ export class PRCreator {
     const commitMessage = `update ${packageName} to ${newVersion}`
 
     const defaultBranch = await this.getDefaultBranch(owner, repo);
-    const files = await this.fetchPackageJson(owner, repo);
+
+    await this.createBranch(owner, repo, branchName, defaultBranch.sha);
+
+    const files = await this.getFiles(owner, repo, branchName);
     await this.updatePackageJson(packageName, newVersion);
-    await this.createBranch(
+    await this.commitFiles(
       owner,
       repo,
       branchName,
       commitMessage,
-      defaultBranch.sha,
       files
     );
     return await this.createPR(
