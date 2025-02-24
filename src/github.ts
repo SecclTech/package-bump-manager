@@ -172,6 +172,8 @@ export class PRCreator {
     await this.getFiles(owner, repo, branch);
     await this.updatePackageJson(packageName, newVersion);
     await this.commitFiles(owner, repo, sha, branch, defaultBranchSha, commitMessage);
+
+    return title
   }
 }
 
