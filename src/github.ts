@@ -61,7 +61,7 @@ export class PRCreator {
   }
 
   private async updatePackageJson(packageName: string, newVersion: string) {
-    runCommand(`cd ${this.localPath} && \\` +
+    await runCommand(`cd ${this.localPath} && \\` +
       `npm install \\` +
       `${packageName}@${newVersion} \\` +
       `--cache ${this.localPath} \\` +
@@ -77,12 +77,16 @@ export class PRCreator {
     files: { sha: string; path: string; }[]
   ) {
 
-    await this.octokit.git.createRef({
-      owner,
-      repo,
-      ref: `refs/heads/${branchName}`,
-      sha: latestSha,
-    });
+    try {
+      await this.octokit.git.createRef({
+        owner,
+        repo,
+        ref: `refs/heads/${branchName}`,
+        sha: latestSha,
+      });
+    } catch {
+      console.log("Failed to create branch, it probably already exists");
+    }
 
     const readOperations = files.map(async ({ path, sha }) =>
     ({
