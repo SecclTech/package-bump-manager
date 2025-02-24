@@ -69,8 +69,8 @@ export class PRCreator {
   private async commitFiles(
     owner: string,
     repo: string,
-    baseTreeSha: string,
     branch: string,
+    baseTreeSha: string,
     latestCommitSha: string,
     commitMessage: string
   ) {
