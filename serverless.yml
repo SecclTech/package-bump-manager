@@ -13,10 +13,26 @@ provider:
 functions:
   myLambda:
     handler: dist/index.handler
+    environment:
+      DYNAMODB_TABLE: !Ref DependenciesTable
     events:
       - http:
           path: hello
           method: get
+
+resources:
+  Resources:
+    DependenciesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Dependencies
+        AttributeDefinitions:
+          - AttributeName: package_name
+            AttributeType: S
+        KeySchema:
+          - AttributeName: package_name
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
 
 package:
   patterns:

@@ -9,11 +9,15 @@ export default class DependencyStore {
     this.tableName = tableName;
   }
 
-  public async store(repoName: string, packageName: string, dependencies: any) {
-    if (!repoName || !packageName || !dependencies) {
+  public async store(event: Record<string, any>) {
+
+    const { repository, package_name, dependencies } = event;
+    if (!repository || !package_name || !dependencies) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: "Invalid payload: Missing storage information" })
+        body: JSON.stringify({
+          error: "Invalid payload: repository, package_name, and dependencies are required fields"
+        })
       };
     }
 
@@ -21,8 +25,8 @@ export default class DependencyStore {
       const command = new PutItemCommand({
         TableName: this.tableName,
         Item: {
-          "repo_name": { S: repoName },
-          "package_name": { S: packageName },
+          "repo_name": { S: repository },
+          "package_name": { S: package_name },
           "dependencies": { S: JSON.stringify(dependencies["dependencies"]) || "" },
           "dev_dependencies": { S: JSON.stringify(dependencies["devDependencies"]) || "" },
         }
@@ -33,7 +37,7 @@ export default class DependencyStore {
       return {
         statusCode: 200,
         body: JSON.stringify({
-          message: `Successfully stored dependencies for repository '${repoName}' in DynamoDB`
+          message: `Successfully stored dependencies for repository '${repository}' in DynamoDB`
         })
       };
 
