@@ -10,8 +10,19 @@ provider:
     APP_ID: ${env:APP_ID}
     APP_INSTALLATION_ID: ${env:APP_INSTALLATION_ID}
 
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "dynamodb:DescribeTable"
+            - "dynamodb:GetItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:UpdateItem"
+          Resource: !GetAtt DependenciesTable.Arn
+
 functions:
-  myLambda:
+  packageBumper:
     handler: dist/index.handler
     environment:
       DYNAMODB_TABLE: !Ref DependenciesTable
