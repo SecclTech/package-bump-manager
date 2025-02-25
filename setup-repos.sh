@@ -80,7 +80,7 @@ for PACKAGE in "${ALL_PACKAGES[@]}"; do
     git commit -m "Initial commit for $PACKAGE" > /dev/null
 
     # Create GitHub repository
-    gh repo create "$GITHUB_USER_OR_ORG/$PACKAGE" --public --source=. --remote=origin --push > /dev/null
+    gh repo create "$GITHUB_USER_OR_ORG/$PACKAGE" --private --source=. --remote=origin --push > /dev/null
 
     echo "GitHub repository created: https://github.com/$GITHUB_USER_OR_ORG/$PACKAGE"
 
