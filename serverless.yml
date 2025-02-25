@@ -2,17 +2,13 @@ service: test-bump-lambda-sandbox
 
 provider:
   name: aws
-  runtime: nodejs18.x
+  runtime: nodejs20.x
   region: eu-west-1
   profile: sandbox
   environment:
     APP_PRIVATE_KEY: ${env:APP_PRIVATE_KEY}
     APP_ID: ${env:APP_ID}
     APP_INSTALLATION_ID: ${env:APP_INSTALLATION_ID}
-
-plugins:
-  - serverless-better-credentials
-  - serverless-plugin-typescript
 
 functions:
   myLambda:
@@ -21,3 +17,11 @@ functions:
       - http:
           path: hello
           method: get
+
+package:
+  patterns:
+    - "!**"
+    - dist/**
+    - node_modules/**
+    - package.json
+  excludeDevDependencies: true

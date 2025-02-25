@@ -59,11 +59,11 @@ export class PRCreator {
 
   private async updatePackageJson(packageName: string, newVersion: string) {
     // TODO: run npm bump on new branch
-    await runCommand(`cd ${this.#localPath} && \\` +
-      `npm install \\` +
-      `${packageName}@${newVersion} \\` +
-      `--cache ${this.#localPath} \\` +
-      "--package-lock-only \\");
+    await runCommand(`cd ${this.#localPath} && ` +
+      `npm install ` +
+      `${packageName}@${newVersion} ` +
+      `--cache ${this.#localPath} ` +
+      "--package-lock-only");
   }
 
   private async commitFiles(
@@ -223,6 +223,3 @@ async function runCommand(command: string) {
   }
   console.log(`stdout: \n${stdout}`);
 }
-
-const gh = new PRCreator();
-gh.createPackageUpdatePR({ owner: "seccl-platform-test", repo: "foo", packageName: "typescript", newVersion: "4.3.5" });
