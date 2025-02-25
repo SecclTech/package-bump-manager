@@ -5,7 +5,12 @@ const events = {
   request_type: 'store_dependency',
   package_name: "@seccl/foo",
   repository: "foo",
-  dependencies: { dependencies: { p1: "1.0.0" } },
+  dependencies: {
+    dependencies: {
+      p1: "1.0.0",
+      ["@seccl/p2"]: "0.5.0",
+    }
+  },
   is_workspace: false
 };
 

@@ -2,15 +2,12 @@ import { APIGatewayProxyResult, Context } from "aws-lambda";
 import DependencyStore from "./dependency_store.js";
 import PackageUpdater from "./package_updater.js";
 
-// TODO: remove hardcoded
-const OWNER = "seccl-platform-test";
-
 export const handler = async (
   event: Record<string, any>,
   _context: Context
 ): Promise<APIGatewayProxyResult> => {
   try {
-    const { DYNAMODB_TABLE } = process.env;
+    const { DYNAMODB_TABLE, GIT_OWNER } = process.env;
 
     if (!DYNAMODB_TABLE) {
       return {
@@ -18,7 +15,13 @@ export const handler = async (
         body: "Internal server error: Missing DYNAMODB_TABLE environment variable"
       }
     }
-    console.log("DYNAMODB_TABLE:", DYNAMODB_TABLE);
+    if (!GIT_OWNER) {
+      return {
+        statusCode: 500,
+        body: "Internal server error: Missing GIT_OWNER environment variable"
+      }
+    }
+    console.log("DYNAMODB_TABLE:", DYNAMODB_TABLE, "GIT_OWNER:", GIT_OWNER);
 
     if (!event.request_type) {
       return {

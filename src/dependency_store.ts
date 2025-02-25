@@ -25,16 +25,13 @@ export default class DependencyStore {
       repo_name: { S: repository },
       package_name: { S: package_name },
     }
-    if (isRecordOfString(dependencies.dependencies)) {
-      Item.dependencies = {
-        S: JSON.stringify(dependencies.dependencies)
-      };
-    }
-    if (isRecordOfString(dependencies.devDependencies)) {
-      Item.devDependencies = {
-        S: JSON.stringify(dependencies.devDependencies)
-      };
-    }
+    const deps = filterDependencies(dependencies.dependencies);
+    Item.dependencies = { S: JSON.stringify(deps) };
+
+    const devDeps = filterDependencies(dependencies.devDependencies);
+    Item.devDependencies = { S: JSON.stringify(devDeps) };
+
+    console.log("Inserting item:", Item);
 
     const command = new PutItemCommand({
       TableName: this.tableName,
@@ -61,6 +58,15 @@ export default class DependencyStore {
       };
     }
   }
+}
+
+function filterDependencies(dependencies: any) {
+  if (!isRecordOfString(dependencies)) {
+    return {};
+  }
+  return Object.fromEntries(Object.entries(dependencies).filter(
+    ([k,]) => k.startsWith('@seccl/')
+  ));
 }
 
 function isRecordOfString(value: unknown): value is Record<string, string> {

@@ -26,6 +26,7 @@ functions:
     handler: dist/index.handler
     environment:
       DYNAMODB_TABLE: !Ref DependenciesTable
+      GIT_OWNER: "seccl-platform-test"
     events:
       - http:
           path: hello
