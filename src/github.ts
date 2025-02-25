@@ -50,8 +50,6 @@ export class PRCreator {
 
         writeFile(filePath, pathContents);
         console.log(`Writing to ${filePath} from ${owner}/${repo} ...`);
-
-        return data.path
       })
 
     await Promise.all(writePromises);
@@ -103,7 +101,6 @@ export class PRCreator {
       parents: [latestCommitSha],
     })
 
-    console.log(branch, newCommit.sha)
     await this.#octokit.git.updateRef({
       owner,
       repo,
@@ -132,7 +129,6 @@ export class PRCreator {
     if (prs.length === 0) {
       console.log("Creating PR")
       // TODO: Assignee
-      console.log(defaultBranch, branch)
       const { data: { html_url } } = await this.#octokit.pulls.create({
         owner,
         repo,
