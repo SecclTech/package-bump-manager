@@ -7,7 +7,7 @@
     "start": "tsc && node dist/harness.js",
     "build": "tsc",
     "test": "jest",
-    "deploy": "npm run build && sls deploy"
+    "deploy": "tsc && sls deploy"
   },
   "author": "",
   "license": "ISC",

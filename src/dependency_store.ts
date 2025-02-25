@@ -1,4 +1,4 @@
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { AttributeValue, DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 
 export default class DependencyStore {
   private dynamodbClient: DynamoDBClient;
@@ -21,17 +21,27 @@ export default class DependencyStore {
       };
     }
 
-    try {
-      const command = new PutItemCommand({
-        TableName: this.tableName,
-        Item: {
-          "repo_name": { S: repository },
-          "package_name": { S: package_name },
-          "dependencies": { S: JSON.stringify(dependencies["dependencies"]) || "" },
-          "dev_dependencies": { S: JSON.stringify(dependencies["devDependencies"]) || "" },
-        }
-      });
+    const Item: Record<string, AttributeValue> = {
+      repo_name: { S: repository },
+      package_name: { S: package_name },
+    }
+    if (isRecordOfString(dependencies.dependencies)) {
+      Item.dependencies = {
+        S: JSON.stringify(dependencies.dependencies)
+      };
+    }
+    if (isRecordOfString(dependencies.devDependencies)) {
+      Item.devDependencies = {
+        S: JSON.stringify(dependencies.devDependencies)
+      };
+    }
 
+    const command = new PutItemCommand({
+      TableName: this.tableName,
+      Item,
+    });
+
+    try {
       await this.dynamodbClient.send(command);
 
       return {
@@ -51,5 +61,16 @@ export default class DependencyStore {
       };
     }
   }
+}
+
+function isRecordOfString(value: unknown): value is Record<string, string> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.entries(value).every(
+      ([key, val]) => typeof key === 'string' && typeof val === 'string'
+    )
+  );
 }
 

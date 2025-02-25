@@ -18,7 +18,7 @@ export const handler = async (
         body: "Internal server error: Missing DYNAMODB_TABLE environment variable"
       }
     }
-    console.log("DYNAMODB_TABLE: ", DYNAMODB_TABLE);
+    console.log("DYNAMODB_TABLE:", DYNAMODB_TABLE);
 
     if (!event.request_type) {
       return {
