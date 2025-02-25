@@ -18,7 +18,6 @@ export const handler = async (
         })
       };
     }
-
     console.log("Received event:", event.request_type);
 
     switch (event.request_type) {

@@ -1,81 +1,221 @@
+import { writeFile, readFile } from "fs/promises";
+import { exec as execCallback } from "child_process";
+import { promisify } from "util";
+import { RequestError } from "@octokit/request-error";
+
+const exec = promisify(execCallback);
+
 import { Octokit } from "@octokit/rest";
 import { createAppAuth } from "@octokit/auth-app";
 
+
 export class PRCreator {
-  private octokit: Octokit;
+  #octokit: Octokit;
+  // TODO: Avoid collisions
+  #localPath = "/tmp/";
+  #paths = ["package.json", "package-lock.json"];
 
   constructor() {
-    this.octokit = new Octokit({
+    const { APP_ID, APP_PRIVATE_KEY, APP_INSTALLATION_ID } = process.env;
+    this.#octokit = new Octokit({
       authStrategy: createAppAuth,
       auth: {
-        appId: process.env.APP_ID,
-        privateKey: process.env.APP_PRIVATE_KEY,
-        installationId: process.env.APP_INSTALLATION_ID,
+        appId: APP_ID,
+        privateKey: APP_PRIVATE_KEY,
+        installationId: APP_INSTALLATION_ID,
       },
     });
   }
 
-  async createPackageUpdatePR({ owner, repo, packageName, newVersion }: { owner: string; repo: string; packageName: string; newVersion: string; }) {
-    const branchName = `update-${packageName}-to-${newVersion}`;
+  private async getFiles(owner: string, repo: string, branch: string) {
+    const responsePromises = await Promise.all(this.#paths.map(path =>
+      this.#octokit.repos.getContent({
+        owner,
+        repo,
+        path,
+        ref: branch,
+      })
+    ));
 
-    const { data: repoData } = await this.octokit.repos.get({ owner, repo });
-    const defaultBranch = repoData.default_branch;
+    const writePromises = responsePromises
+      .map(({ data }) => {
+        if (!("content" in data)) {
+          throw new Error(
+            `data.content is missing from getContent response ${owner}/${repo}`
+          );
+        }
 
-    const { data: latestCommit } = await this.octokit.repos.getBranch({ owner, repo, branch: defaultBranch });
-    await this.octokit.git.createRef({
-      owner,
-      repo,
-      ref: `refs/heads/${branchName}`,
-      sha: latestCommit.commit.sha,
-    });
+        const filePath = `${this.#localPath}${data.name}`;
+        const pathContents = Buffer.from(data.content, "base64");
 
-    const packageJsonPath = "package.json";
-    const { data: packageJsonFile } = await this.octokit.repos.getContent({
-      owner,
-      repo,
-      path: packageJsonPath,
-      ref: defaultBranch,
-    });
+        writeFile(filePath, pathContents);
+        console.log(`Writing to ${filePath} from ${owner}/${repo} ...`);
+      })
 
-    if (!("content" in packageJsonFile) || !packageJsonFile.content) {
-      throw new Error("package.json content not found or is a directory.");
-    }
+    await Promise.all(writePromises);
+  }
 
-    const packageJsonContent = JSON.parse(
-      Buffer.from(packageJsonFile.content, "base64").toString("utf-8")
+  private async updatePackageJson(packageName: string, newVersion: string) {
+    // TODO: run npm bump on new branch
+    await runCommand(`cd ${this.#localPath} && ` +
+      `npm install ` +
+      `${packageName}@${newVersion} ` +
+      `--cache ${this.#localPath} ` +
+      "--package-lock-only");
+  }
+
+  private async commitFiles(
+    owner: string,
+    repo: string,
+    branch: string,
+    baseTreeSha: string,
+    latestCommitSha: string,
+    commitMessage: string
+  ) {
+    const readOperations = this.#paths.map(async (path) =>
+    ({
+      path,
+      buf: await readFile(`${this.#localPath}${path}`),
+    })
     );
 
-    if (packageJsonContent.dependencies?.[packageName]) {
-      packageJsonContent.dependencies[packageName] = newVersion;
-    } else if (packageJsonContent.devDependencies?.[packageName]) {
-      packageJsonContent.devDependencies[packageName] = newVersion;
-    } else {
-      throw new Error(`Package ${packageName} not found in dependencies or devDependencies.`);
+    const updatedFiles = await Promise.all(readOperations);
+
+    const { data: newTree } = await this.#octokit.git.createTree({
+      owner,
+      repo,
+      base_tree: baseTreeSha,
+      tree: updatedFiles.map(({ path, buf }) => ({
+        path,
+        mode: "100644",
+        type: "blob",
+        content: buf.toString(),
+      }))
+    })
+
+    const { data: newCommit } = await this.#octokit.git.createCommit({
+      owner,
+      repo,
+      message: commitMessage,
+      tree: newTree.sha,
+      parents: [latestCommitSha],
+    })
+
+    await this.#octokit.git.updateRef({
+      owner,
+      repo,
+      ref: `heads/${branch}`,
+      sha: newCommit.sha,
+      force: false
+    })
+  }
+
+  private async createPR(
+    owner: string,
+    repo: string,
+    branch: string,
+    title: string,
+    defaultBranch: string,
+    body: string
+  ) {
+    const { data: prs } = await this.#octokit.pulls.list({
+      owner,
+      repo,
+      state: "open",
+      head: `${owner}:${branch}`,
+      base: defaultBranch,
+    });
+
+    if (prs.length === 0) {
+      console.log("Creating PR")
+      // TODO: Assignee
+      const { data: { html_url } } = await this.#octokit.pulls.create({
+        owner,
+        repo,
+        title,
+        head: branch,
+        base: defaultBranch,
+        body,
+      });
+      return html_url;
     }
 
-    const updatedContent = Buffer.from(
-      JSON.stringify(packageJsonContent, null, 2)
-    ).toString("base64");
-
-    await this.octokit.repos.createOrUpdateFileContents({
+    // TODO: Update with correct information
+    await this.#octokit.pulls.update({
       owner,
       repo,
-      path: packageJsonPath,
-      message: `Update ${packageName} to ${newVersion}`,
-      content: updatedContent,
-      branch: branchName,
-      sha: packageJsonFile.sha,
+      pull_number: prs[0].number,
+      body: prs[0].body + "\n more stuff"
     });
 
-    const { data: pr } = await this.octokit.pulls.create({
-      owner,
-      repo,
-      title: `Update ${packageName} to ${newVersion}`,
-      head: branchName,
-      base: defaultBranch,
-      body: `This PR updates ${packageName} to version ${newVersion}.`,
-    });
-
-    return pr.html_url;
+    return prs[0].html_url;
   }
+
+  private async getDefaultBranch(owner: string, repo: string) {
+    const { data: { default_branch } } = await this.#octokit.repos.get({
+      owner,
+      repo,
+    });
+
+    const { data: { commit: { sha } } } = await this.#octokit.repos.getBranch({
+      owner,
+      repo,
+      branch: default_branch
+    });
+
+    return {
+      name: default_branch,
+      sha
+    };
+  }
+
+  private async getOrCreateBranch(owner: string, repo: string, branch: string, defaultBranchSha: string) {
+    try {
+      const { data } = await this.#octokit.repos.getBranch({
+        owner,
+        repo,
+        branch
+      });
+      return data.commit.sha;
+    } catch (error) {
+      if ((error as RequestError).status === 404) {
+        await this.#octokit.git.createRef({
+          owner, repo, ref: `refs/heads/${branch}`, sha: defaultBranchSha
+        })
+      }
+      return defaultBranchSha;
+    }
+  }
+
+  async createPackageUpdatePR({ owner, repo, packageName, newVersion }: { owner: string; repo: string; packageName: string; newVersion: string; }) {
+
+    // TODO: Add Jira ticket number
+    const branch = `SECCL_000000`
+    const title = `Update ${packageName} to ${newVersion}`
+    // TODO: Link to PR ref that created
+    const body = `This PR updates ${packageName} to version ${newVersion}.`
+    const commitMessage = `update ${packageName} to ${newVersion}`
+
+    const defaultBranch = await this.getDefaultBranch(owner, repo);
+    const latestCommitSha = await this.getOrCreateBranch(owner, repo, branch, defaultBranch.sha);
+
+    await this.getFiles(owner, repo, branch);
+    await this.updatePackageJson(packageName, newVersion);
+    // TODO: Do not push if no changes
+    await this.commitFiles(
+      owner, repo, branch, defaultBranch.sha, latestCommitSha, commitMessage
+    );
+
+    return await this.createPR(
+      owner, repo, branch, title, defaultBranch.name, body
+    );
+  }
+}
+
+async function runCommand(command: string) {
+  const { stdout, stderr } = await exec(command);
+  if (stderr) {
+    console.error(`stderr: ${stderr}`);
+  }
+  console.log(`stdout: \n${stdout}`);
 }
