@@ -7,8 +7,6 @@ type Package = {
   dev_dependencies: Record<string, string>;
 };
 
-const DYNAMODB_TABLE = "RepoDependancies";
-
 export class PackageBuilder {
   private client: DynamoDBClient;
 
@@ -18,7 +16,7 @@ export class PackageBuilder {
 
   public async getPackages(): Promise<Package[]> {
     const scanCommand = new ScanCommand({
-      TableName: DYNAMODB_TABLE,
+      TableName: process.env.DYNAMODB_TABLE,
     });
 
     try {
