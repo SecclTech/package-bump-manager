@@ -3,3 +3,5 @@ dist/
 .build/
 .serverless/
 .env
+/test/test-npm-env/
+/test/storage/
