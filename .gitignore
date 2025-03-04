@@ -5,3 +5,6 @@ dist/
 .env
 /test/test-npm-env/
 /test/storage/
+/test/htpasswd
+*/**/*.js
+*/**/*.d.ts
