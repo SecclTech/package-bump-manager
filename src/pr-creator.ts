@@ -1,30 +1,26 @@
 // pr-creator.ts
-import { createGitHubClient, createBranch } from './services/github.service.js'
-import { downloadRepositoryFiles, readLocalFiles } from './services/file.service.js'
+import { createBranch, createGitHubClient } from './services/github.service.js'
+import {
+  downloadRepositoryFiles,
+  readLocalFiles
+} from './services/file.service.js'
 import { updatePackageVersion } from './services/npm.service.js'
-import { BRANCH_PREFIX, GIT } from './config/constants.js'
+import { BRANCH_PREFIX } from './config/constants.js'
 import type { PackageUpdateParams } from './types/pr.js'
 
 interface GithubGraphQLResponse {
   repository: {
-    id: string;
-    defaultBranchRef: {
-      name: string;
-      target: {
+    id: string; defaultBranchRef: {
+      name: string; target: {
         oid: string;
       }
-    };
-    pullRequests: {
+    }; pullRequests: {
       edges: {
         node: {
-          title: string;
-          number: number;
-          body: string;
-          url: string;
+          title: string; number: number; body: string; url: string;
         };
       }[];
-    };
-    ref?: {
+    }; ref?: {
       target: {
         oid: string;
       }
@@ -37,31 +33,26 @@ interface FileAdditionInput {
   contents: string;
 }
 
-// Variables for the mutation
 interface CreateCommitOnBranchVariables {
   repositoryId: string;
   branchName: string;
   latestCommitSha: string;
   commitMessage: string;
   fileAdditions: FileAdditionInput[];
+
   [key: string]: unknown;
 }
 
-// Expected response from the mutation
 interface CreateCommitOnBranchResponse {
   createCommitOnBranch: {
     commit: {
-      oid: string;
-      url: string;
+      oid: string; url: string;
     };
   };
 }
 
 export async function createPackageUpdatePR ({
-  owner,
-  repo,
-  packageName,
-  newVersion,
+  owner, repo, packageName, newVersion,
 }: PackageUpdateParams): Promise<string> {
   const octokit = createGitHubClient()
 
@@ -85,27 +76,28 @@ export async function createPackageUpdatePR ({
         }
       }
     }
-  `;
+  `
 
-  const response = await octokit.graphql<GithubGraphQLResponse>(query, { owner, repo, branch })
+  const response = await octokit.graphql<GithubGraphQLResponse>(query, {
+    owner, repo, branch
+  })
   const {
     repository: {
-      id: repositoryId,
-      defaultBranchRef: {
-        name: defaultBranchName,
-        target: { oid: defaultBranchSha },
-      },
-      ref,
-      pullRequests: { edges },
+      id: repositoryId, defaultBranchRef: {
+        name: defaultBranchName, target: { oid: defaultBranchSha },
+      }, ref, pullRequests: { edges },
     },
-  } = response;
+  } = response
 
-  const existingBranchSha = ref?.target.oid;
-  const existingPRs = edges.map(({ node }) => node);
+  const existingBranchSha = ref?.target.oid
+  const existingPRs = edges.map(({ node }) => node)
 
-  const latestCommitSha =
-    existingBranchSha ??
-    (await createBranch(octokit, { owner, repo, branch, defaultBranchSha }));
+  const latestCommitSha = existingBranchSha ?? (await createBranch(octokit, {
+    owner,
+    repo,
+    branch,
+    defaultBranchSha
+  }))
 
   await downloadRepositoryFiles(octokit, { owner, repo, branch })
   await updatePackageVersion(packageName, newVersion)
@@ -129,7 +121,7 @@ export async function createPackageUpdatePR ({
         commit { oid, url }
       }
     }
-  `;
+  `
 
   const variables: CreateCommitOnBranchVariables = {
     repositoryId,
@@ -139,10 +131,7 @@ export async function createPackageUpdatePR ({
     fileAdditions: updatedFiles
   }
 
-  await octokit.graphql<CreateCommitOnBranchResponse>(
-    mutation,
-    variables
-  )
+  await octokit.graphql<CreateCommitOnBranchResponse>(mutation, variables)
 
   if (existingPRs.length === 0) {
     const { data: { html_url } } = await octokit.pulls.create({
