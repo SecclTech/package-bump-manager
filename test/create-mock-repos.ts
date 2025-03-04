@@ -4,7 +4,6 @@ import { existsSync } from 'fs';
 import * as path from "path";
 import * as crypto from 'crypto';
 
-
 const SCRIPT_DIR = path.dirname(new URL(import.meta.url).pathname);
 const TEST_ENV = path.join(SCRIPT_DIR, "test-npm-env");
 const GITHUB_USER_OR_ORG = "test-user"; // Change this if needed
@@ -278,24 +277,24 @@ const installAndPublishPackages = async (): Promise<void> => {
   }
 };
 
-//
-// // 🔹 Initialize Git repositories
-// const initializeGitRepos = async (): Promise<void> => {
-//   console.log("📌 Initializing Git repositories...");
-//   Object.values(packageTiers).flat().forEach((packageName) => {
-//     const dir = path.join(TEST_ENV, packageName);
-//     process.chdir(dir);
-//
-//     execSync("git init", { stdio: "ignore" });
-//     execSync("git branch -M main", { stdio: "ignore" });
-//
-//     await fs.writeFile(".gitignore", "node_modules/\n");
-//     execSync("git add .");
-//     execSync(`git commit -m "Initial commit for @seccl/${packageName}"`, { stdio: "ignore" });
-//
-//     console.log(`✅ Initialized Git repository for @seccl/${packageName}`);
-//   });
-// };
+
+// 🔹 Initialize Git repositories
+const initializeGitRepos = async (): Promise<void> => {
+  console.log("📌 Initializing Git repositories...");
+  for (const packageName of Object.values(packageTiers).flat()) {
+    const dir = path.join(TEST_ENV, packageName);
+    process.chdir(dir);
+
+    execSync("git init", { stdio: "ignore" });
+    execSync("git branch -M main", { stdio: "ignore" });
+
+    await fs.writeFile(".gitignore", "node_modules/\n");
+    execSync("git add .");
+    execSync(`git commit -m "Initial commit for @seccl/${packageName}"`, { stdio: "ignore" });
+
+    console.log(`✅ Initialized Git repository for @seccl/${packageName}`);
+  }
+};
 
 // 🔹 Main execution flow
 const main = async (): Promise<void> => {
@@ -304,7 +303,7 @@ const main = async (): Promise<void> => {
     await setupTestEnvironment();
     await createPackages();
     await installAndPublishPackages();
-    // initializeGitRepos();
+    await initializeGitRepos();
 
     console.log("✅ All packages published and Git repos initialized successfully!");
   } catch (error) {

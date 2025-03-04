@@ -10,10 +10,10 @@ type Package = {
 const DYNAMODB_TABLE = "RepoDependancies";
 
 export class PackageBuilder {
-  private client: DynamoDBClient;
+  #client: DynamoDBClient;
 
   constructor() {
-    this.client = new DynamoDBClient({ region: "eu-west-1" });
+    this.#client = new DynamoDBClient({ region: "eu-west-1" });
   }
 
   public async getPackages(): Promise<Package[]> {
@@ -22,7 +22,7 @@ export class PackageBuilder {
     });
 
     try {
-      const result: ScanCommandOutput = await this.client.send(scanCommand);
+      const result: ScanCommandOutput = await this.#client.send(scanCommand);
 
       const pkgs: Package[] = result.Items?.map(item => {
         return {
