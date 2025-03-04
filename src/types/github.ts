@@ -1,21 +1,46 @@
 export type RepoParams = {
-  owner: string;
-  repo: string;
+  owner: string; repo: string;
 };
 
-export type BranchInfo = {
-  name: string;
-  sha: string;
-};
+export interface RepositoryQueryResponse {
+  repository: {
+    id: string; defaultBranchRef: {
+      name: string; target: {
+        oid: string;
+      }
+    }; pullRequests: {
+      edges: {
+        node: {
+          title: string; number: number; body: string; url: string;
+        };
+      }[];
+    }; ref?: {
+      target: {
+        oid: string;
+      }
+    };
+  };
+}
 
-export type TreeItem = {
+export interface FileAdditionInput {
   path: string;
-  mode: "100644";
-  type: "blob";
-  content: string;
-};
+  contents: string;
+}
 
-export type GitHubError = {
-  status: number;
-  message: string;
-};
+export interface CreateCommitOnBranchVariables {
+  repositoryId: string;
+  branchName: string;
+  latestCommitSha: string;
+  commitMessage: string;
+  fileAdditions: FileAdditionInput[];
+
+  [key: string]: unknown;
+}
+
+export interface CreateCommitOnBranchResponse {
+  createCommitOnBranch: {
+    commit: {
+      oid: string; url: string;
+    };
+  };
+}

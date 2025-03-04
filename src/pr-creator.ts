@@ -6,50 +6,12 @@ import {
 } from './services/file.service.js'
 import { updatePackageVersion } from './services/npm.service.js'
 import { BRANCH_PREFIX } from './config/constants.js'
+import {
+  CreateCommitOnBranchResponse,
+  CreateCommitOnBranchVariables,
+  FileAdditionInput, RepositoryQueryResponse
+} from './types/github.js'
 import type { PackageUpdateParams } from './types/pr.js'
-
-interface GithubGraphQLResponse {
-  repository: {
-    id: string; defaultBranchRef: {
-      name: string; target: {
-        oid: string;
-      }
-    }; pullRequests: {
-      edges: {
-        node: {
-          title: string; number: number; body: string; url: string;
-        };
-      }[];
-    }; ref?: {
-      target: {
-        oid: string;
-      }
-    };
-  };
-}
-
-interface FileAdditionInput {
-  path: string;
-  contents: string;
-}
-
-interface CreateCommitOnBranchVariables {
-  repositoryId: string;
-  branchName: string;
-  latestCommitSha: string;
-  commitMessage: string;
-  fileAdditions: FileAdditionInput[];
-
-  [key: string]: unknown;
-}
-
-interface CreateCommitOnBranchResponse {
-  createCommitOnBranch: {
-    commit: {
-      oid: string; url: string;
-    };
-  };
-}
 
 export async function createPackageUpdatePR ({
   owner, repo, packageName, newVersion,
@@ -78,7 +40,7 @@ export async function createPackageUpdatePR ({
     }
   `
 
-  const response = await octokit.graphql<GithubGraphQLResponse>(query, {
+  const response = await octokit.graphql<RepositoryQueryResponse>(query, {
     owner, repo, branch
   })
   const {
@@ -93,10 +55,7 @@ export async function createPackageUpdatePR ({
   const existingPRs = edges.map(({ node }) => node)
 
   const latestCommitSha = existingBranchSha ?? (await createBranch(octokit, {
-    owner,
-    repo,
-    branch,
-    defaultBranchSha
+    owner, repo, branch, defaultBranchSha
   }))
 
   await downloadRepositoryFiles(octokit, { owner, repo, branch })
