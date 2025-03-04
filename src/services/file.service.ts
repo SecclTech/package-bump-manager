@@ -57,7 +57,7 @@ export async function downloadRepositoryFiles(
 }
 
 
-export async function readLocalFiles(): Promise<Array<{ path: string; content: string }>> {
+export async function readLocalFiles(): Promise<Array<{ path: string; contents: string }>> {
   try {
     return await Promise.all(
       PATHS.map(async (path) => {
@@ -66,7 +66,7 @@ export async function readLocalFiles(): Promise<Array<{ path: string; content: s
           const content = await readFile(localPath);
           return {
             path,
-            content: content.toString(),
+            contents: content.toString("base64"),
           };
         } catch (error) {
           throw new FileSystemError(
