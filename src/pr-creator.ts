@@ -45,9 +45,13 @@ export async function createPackageUpdatePR ({
   })
   const {
     repository: {
-      id: repositoryId, defaultBranchRef: {
-        name: defaultBranchName, target: { oid: defaultBranchSha },
-      }, ref, pullRequests: { edges },
+      id: repositoryId,
+      defaultBranchRef: {
+        name: defaultBranchName,
+        target: { oid: defaultBranchSha },
+      },
+      ref,
+      pullRequests: { edges },
     },
   } = response
 
@@ -55,7 +59,7 @@ export async function createPackageUpdatePR ({
   const existingPRs = edges.map(({ node }) => node)
 
   const latestCommitSha = existingBranchSha ?? (await createBranch(octokit, {
-    owner, repo, branch, defaultBranchSha
+    owner, repositoryId, branch, defaultBranchSha
   }))
 
   await downloadRepositoryFiles(octokit, { owner, repo, branch })
@@ -95,7 +99,7 @@ export async function createPackageUpdatePR ({
   if (existingPRs.length === 0) {
     const { data: { html_url } } = await octokit.pulls.create({
       owner,
-      repo,
+      repo: repo!,
       title: metadata.title,
       head: branch,
       base: defaultBranchName,
@@ -107,7 +111,7 @@ export async function createPackageUpdatePR ({
   const existingPR = existingPRs[0]
   await octokit.pulls.update({
     owner,
-    repo,
+    repo: repo!,
     pull_number: existingPR.number,
     body: `${existingPR.body}\n${metadata.body}`,
   })

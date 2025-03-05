@@ -1,20 +1,34 @@
 export type RepoParams = {
-  owner: string; repo: string;
+  owner: string;
+  repositoryId?: string;
+  repo?: string;
 };
+
+export interface CreateBranchParams extends RepoParams {
+  branch: string;
+  defaultBranchSha: string
+}
 
 export interface RepositoryQueryResponse {
   repository: {
-    id: string; defaultBranchRef: {
-      name: string; target: {
+    id: string;
+    defaultBranchRef: {
+      name: string;
+      target: {
         oid: string;
       }
-    }; pullRequests: {
+    };
+    pullRequests: {
       edges: {
         node: {
-          title: string; number: number; body: string; url: string;
+          title: string;
+          number: number;
+          body: string;
+          url: string;
         };
       }[];
-    }; ref?: {
+    };
+    ref?: {
       target: {
         oid: string;
       }
@@ -40,7 +54,8 @@ export interface CreateCommitOnBranchVariables {
 export interface CreateCommitOnBranchResponse {
   createCommitOnBranch: {
     commit: {
-      oid: string; url: string;
+      oid: string;
+      url: string;
     };
   };
 }

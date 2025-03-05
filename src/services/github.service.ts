@@ -3,7 +3,7 @@ import { throttling } from '@octokit/plugin-throttling'
 import { retry } from '@octokit/plugin-retry'
 import { createAppAuth } from '@octokit/auth-app'
 import { ConfigurationError } from '../utils/error.js'
-import type { RepoParams } from '../types/github.js'
+import { CreateBranchParams, RepoParams } from '../types/github.js'
 
 const OctokitWithPlugins = Octokit.plugin(throttling, retry)
 const RATE_LIMIT_RETRY_COUNT = 2 as const
@@ -51,14 +51,27 @@ export function createGitHubClient (): Octokit {
   })
 }
 
-export async function createBranch (octokit: Octokit, {
-  owner,
-  repo,
-  branch,
-  defaultBranchSha
-}: RepoParams & { branch: string; defaultBranchSha: string }): Promise<string> {
-  await octokit.git.createRef({
-    owner, repo, ref: `refs/heads/${branch}`, sha: defaultBranchSha,
-  })
-  return defaultBranchSha
+export async function createBranch(
+  octokit: Octokit,
+  { repositoryId, branch, defaultBranchSha }: CreateBranchParams
+): Promise<string> {
+  const mutation = `
+    mutation CreateRef($input: CreateRefInput!) {
+      createRef(input: $input) {
+        ref {
+          name
+        }
+      }
+    }
+  `;
+
+  await octokit.graphql(mutation, {
+    input: {
+      repositoryId,
+      name: `refs/heads/${branch}`,
+      oid: defaultBranchSha,
+    },
+  });
+
+  return defaultBranchSha;
 }
