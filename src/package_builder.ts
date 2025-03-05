@@ -1,4 +1,8 @@
-import { DynamoDBClient, ScanCommand, ScanCommandOutput } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBClient,
+  ScanCommand,
+  ScanCommandOutput
+} from '@aws-sdk/client-dynamodb'
 
 type Package = {
   package_name: string;
@@ -6,8 +10,6 @@ type Package = {
   dependencies: Record<string, string>;
   dev_dependencies: Record<string, string>;
 };
-
-const DYNAMODB_TABLE = "RepoDependancies";
 
 export class PackageBuilder {
   #client: DynamoDBClient;
@@ -18,13 +20,13 @@ export class PackageBuilder {
 
   public async getPackages(): Promise<Package[]> {
     const scanCommand = new ScanCommand({
-      TableName: DYNAMODB_TABLE,
+      TableName: process.env.DYNAMODB_TABLE,
     });
 
     try {
       const result: ScanCommandOutput = await this.#client.send(scanCommand);
 
-      const pkgs: Package[] = result.Items?.map(item => {
+      return result.Items?.map(item => {
         return {
           package_name: item["package_name"]?.S || "",
           repo_name: item["repo_name"]?.S || "",
@@ -32,8 +34,6 @@ export class PackageBuilder {
           dev_dependencies: JSON.parse(item["dev_dependencies"]?.S || "{}"),
         };
       }) || [];
-
-      return pkgs;
 
     } catch (error) {
       console.error("Error fetching data from DynamoDB:", error);

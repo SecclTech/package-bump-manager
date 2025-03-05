@@ -7,7 +7,7 @@
     "start": "tsc && node dist/harness.js",
     "build": "tsc",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js\n",
-    "deploy": "npm run build && sls deploy"
+    "deploy": "tsc && sls deploy"
   },
   "author": "",
   "license": "ISC",
@@ -19,7 +19,8 @@
     "@types/semver": "^7.5.8",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.6",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "serverless": "^3.0.0"
   },
   "dependencies": {
     "@octokit/auth-app": "^7.1.5",
