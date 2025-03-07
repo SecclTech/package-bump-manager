@@ -24,9 +24,9 @@ const context: Context = {
   logGroupName: '',
   logStreamName: '',
   getRemainingTimeInMillis: function(): number { return 0; },
-  done: function(error?: Error, result?: any): void { },
-  fail: function(error: Error | string): void { },
-  succeed: function(messageOrObject: any): void { }
+  done: function(_error?: Error, _result?: any): void { },
+  fail: function(_error: Error | string): void { },
+  succeed: function(_messageOrObject: any): void { }
 };
 
 handler(events, context).then(res => console.log(res));

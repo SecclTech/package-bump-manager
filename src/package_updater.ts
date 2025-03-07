@@ -1,6 +1,6 @@
-import { Version } from "./version.js";
-import { PRCreator } from "./github.js";
+import semver from "semver";
 import { PackageBuilder } from "./package_builder.js";
+import { createPackageUpdatePR } from './pr-creator.js'
 
 type Package = {
   package_name: string;
@@ -10,24 +10,22 @@ type Package = {
 };
 
 class PackageUpdater {
-  private owner: string;
-  private packageUpdater: PRCreator;
+  private readonly owner: string;
   private packageBuilder: PackageBuilder;
 
   constructor(owner: string) {
     this.owner = owner;
-    this.packageUpdater = new PRCreator();
     this.packageBuilder = new PackageBuilder();
   }
 
-  private findParents(name: string, version: Version, packages: Package[]): Package[] {
+  private findParents(name: string, version: string, packages: Package[]): Package[] {
     return packages.filter((pkg) => {
-      const depVersion = pkg.dependencies[name] ? new Version(pkg.dependencies[name]) : null;
-      const devDepVersion = pkg.dev_dependencies[name] ? new Version(pkg.dev_dependencies[name]) : null;
+      const depVersion = pkg.dependencies[name];
+      const devDepVersion = pkg.dev_dependencies[name];
 
       return (
-        (depVersion && version.greaterThan(depVersion)) ||
-        (devDepVersion && version.greaterThan(devDepVersion))
+        (depVersion && semver.gt(version, depVersion)) ||
+        (devDepVersion && semver.gt(version, devDepVersion))
       );
     });
   }
@@ -62,7 +60,7 @@ class PackageUpdater {
 
       const prTargets = this.findParents(
         packageName,
-        new Version(newVersion),
+        newVersion,
         packages
       );
       console.log("PR Targets:", prTargets);
@@ -81,7 +79,7 @@ class PackageUpdater {
       for (const prTarget of prTargets) {
         const repoName = prTarget.repo_name;
         try {
-          const prUrl = await this.packageUpdater.createPackageUpdatePR({
+          const prUrl = await createPackageUpdatePR({
             owner: this.owner,
             repo: repoName,
             packageName,
