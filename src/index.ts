@@ -3,19 +3,18 @@ import DependencyStore from './dependency_store.js'
 import PackageUpdater from './package_updater.js'
 import { loadSecrets } from '@seccl/aws-utils'
 
-// Constants for error messages and request types
 const ERROR_MESSAGES = {
   MISSING_TABLE: 'Internal server error: Missing DYNAMODB_TABLE environment variable',
   MISSING_GIT_OWNER: 'Internal server error: Missing GIT_OWNER environment variable',
   MISSING_REQUEST_TYPE: 'Invalid payload: Request does not have a request_type',
   INVALID_REQUEST_TYPE: 'Invalid request_type',
   INVALID_MESSAGE_BODY: 'Invalid SQS message body format'
-}
+} as const
 
 const REQUEST_TYPES = {
   STORE_DEPENDENCY: 'store_dependency',
   BUMP_PARENTS: 'bump_parents'
-}
+} as const
 
 /**
  * Validates the required environment variables and ensures they are set.
@@ -131,15 +130,12 @@ export const handler = async (event: SQSEvent, _context: Context): Promise<{
   const secrets = require('../secrets-config.json')
   await loadSecrets(secrets)
 
-  // Track failed message IDs to return for partial batch failures
   const failedMessageIds: string[] = []
 
   try {
-    // Validate environment variables once for all messages
     const { DYNAMODB_TABLE, GIT_OWNER } = validateEnvironment()
     console.log('DYNAMODB_TABLE:', DYNAMODB_TABLE, 'GIT_OWNER:', GIT_OWNER)
 
-    // Process each message in the batch
     const processPromises = event.Records.map(async (record: SQSRecord) => {
       const messageId = record.messageId
 
@@ -154,7 +150,6 @@ export const handler = async (event: SQSEvent, _context: Context): Promise<{
         const { success } = await processJob(jobPayload, DYNAMODB_TABLE, GIT_OWNER)
 
         if (!success) {
-          // Add to failed messages for SQS to retry
           failedMessageIds.push(messageId)
         }
       } catch (recordError) {
@@ -163,16 +158,13 @@ export const handler = async (event: SQSEvent, _context: Context): Promise<{
       }
     })
 
-    // Wait for all message processing to complete
     await Promise.all(processPromises)
 
   } catch (error) {
     console.error('Fatal error processing batch:', error)
-    // In case of fatal errors, mark all messages as failed so they can be retried
     failedMessageIds.push(...event.Records.map(record => record.messageId))
   }
 
-  // Return any failed message IDs for SQS to retry
   return {
     batchItemFailures: failedMessageIds.map(itemIdentifier => ({ itemIdentifier }))
   }
