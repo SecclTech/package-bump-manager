@@ -4,6 +4,11 @@ export type RepoParams = {
   repo?: string;
 };
 
+export interface DownloadRepositoryFilesParams extends Omit<RepoParams, 'repositoryId'> {
+  repo: string,
+  branch: string
+}
+
 export interface CreateBranchParams extends RepoParams {
   branch: string;
   defaultBranchSha: string

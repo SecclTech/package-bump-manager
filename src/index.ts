@@ -39,7 +39,7 @@ export const handler = async (
         return await dependencyStore.store(event);
       }
       case "bump_parents": {
-        const updater = new PackageUpdater(OWNER);
+        const updater = new PackageUpdater(GIT_OWNER);
         const { package_name, new_version } = event;
         return await updater.bumpParents(package_name, new_version);
       }

@@ -2,11 +2,11 @@ import { readFile, writeFile } from 'fs/promises'
 import { Octokit } from '@octokit/rest'
 import { LOCAL_PATH, PATHS } from '../config/constants.js'
 import { FileSystemError, GitHubApiError } from '../utils/error.js'
-import type { RepoParams } from '../types/github.js'
+import { DownloadRepositoryFilesParams } from '../types/github.js'
 
 export async function downloadRepositoryFiles(
   octokit: Octokit,
-  { owner, repo, branch }: RepoParams & { branch: string }
+  { owner, repo, branch }: DownloadRepositoryFilesParams
 ): Promise<void> {
   try {
     const responses = await Promise.all(
