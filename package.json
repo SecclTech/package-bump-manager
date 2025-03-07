@@ -4,10 +4,10 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "start": "tsc && node dist/harness.js",
-    "build": "tsc",
+    "start": "npm run build && node dist/harness.js",
+    "build": "tsc --build",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js\n",
-    "deploy": "tsc && sls deploy"
+    "deploy": "npm run build && serverless deploy"
   },
   "author": "",
   "license": "ISC",
@@ -29,7 +29,8 @@
     "@octokit/plugin-retry": "^7.1.4",
     "@octokit/plugin-throttling": "^9.4.0",
     "@octokit/rest": "^21.1.1",
-    "@seccl/aws-utils": "^6.2.0",
+    "@seccl/aws-utils": "^6.2.1",
+    "@serverless/typescript": "^3.38.0",
     "semver": "^7.7.1"
   }
 }

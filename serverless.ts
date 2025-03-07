@@ -131,7 +131,7 @@ const resources: Resources = {
         BillingMode: 'PAY_PER_REQUEST',
       },
     },
-    PortfolioAnalysisEventQueue: {
+    PackageBumpEventQueue: {
       Type: 'AWS::SQS::Queue',
       Properties: {
         DelaySeconds: 0,
@@ -141,12 +141,12 @@ const resources: Resources = {
         RedrivePolicy: {
           maxReceiveCount: 1,
           deadLetterTargetArn: {
-            'Fn::GetAtt': ['PortfolioAnalysisEventDLQ', 'Arn']
+            'Fn::GetAtt': ['PackageBumpEventDLQ', 'Arn']
           }
         }
       }
     },
-    PortfolioAnalysisEventDLQ: {
+    PackageBumpEventDLQ: {
       Type: 'AWS::SQS::Queue',
       Properties: {
         DelaySeconds: 0,
@@ -179,20 +179,22 @@ const pkg: Package = {
   excludeDevDependencies: true,
 };
 
+const custom = {
+  datadog: configureDataDog(`${secretsManagerArn}/datadog-api`, packageVersion),
+  prune: {
+    automatic: true,
+    number: 3
+  }
+}
+
 export const serverless: Serverless = {
   service: serviceName,
-  provider: provider,
-  functions: functions,
-  resources: resources,
+  provider,
+  functions,
+  resources,
   package: pkg,
   plugins: standardPlugins,
-  custom: {
-    datadog: configureDataDog(`${secretsManagerArn}/datadog-api`, packageVersion),
-    prune: {
-      automatic: true,
-      number: 3
-    }
-  }
+  custom
 };
 
 module.exports = buildServerless(serverless);
