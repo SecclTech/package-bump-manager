@@ -31,7 +31,7 @@ const coreEnv: string = process.env.CORE_ENV ?? 'genshared';
 const settingsJson = standardConfigLoader();
 
 const secretsManagerArn: string = settingsJson.secretsManagerArn;
-const runtime: string = settingsJson.lambdaRuntime ?? process.env.LAMBDA_RUNTIME ?? 'nodejs22.x';
+const runtime: string = 'nodejs22.x';
 const region: string = process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION ?? 'eu-west-1';
 const packageVersion: string = packageJson.version ?? process.env.PACKAGE_VERSION ?? 'unknown';
 const serviceName: string = packageJson.name.replace('@seccl/', '');
