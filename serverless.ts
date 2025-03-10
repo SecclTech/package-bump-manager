@@ -93,8 +93,8 @@ const provider: Provider = {
 
 const functions: Functions = {
   service: {
-    handler: 'index.handler',
-    timeout: 900,
+    handler: 'src/index.handler',
+    timeout: 30,
     memorySize: 10240,
     environment: {
       DYNAMODB_TABLE: { Ref: 'DependenciesTable' },
@@ -115,7 +115,6 @@ const resources: Resources = {
     DependenciesTable: {
       Type: 'AWS::DynamoDB::Table',
       Properties: {
-        TableName: 'Dependencies',
         AttributeDefinitions: [
           {
             AttributeName: 'package_name',

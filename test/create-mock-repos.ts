@@ -4,7 +4,7 @@ import { existsSync } from 'fs';
 import * as path from "path";
 import * as crypto from 'crypto';
 
-const SCRIPT_DIR = path.dirname(new URL(import.meta.url).pathname);
+const SCRIPT_DIR = path.dirname(process.cwd());
 const TEST_ENV = path.join(SCRIPT_DIR, "test-npm-env");
 const GITHUB_USER_OR_ORG = "test-user"; // Change this if needed
 

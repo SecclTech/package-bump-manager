@@ -2,7 +2,6 @@
   "name": "@seccl/package-bump-manager",
   "version": "1.0.0",
   "main": "src/index.ts",
-  "type": "module",
   "scripts": {
     "start": "npm run build && node dist/harness.js",
     "build": "tsc --build",
@@ -22,6 +21,7 @@
     "serverless": "^3.40.0",
     "serverless-plugin-datadog": "^5.83.0",
     "ts-jest": "^29.2.6",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
   },
   "dependencies": {
