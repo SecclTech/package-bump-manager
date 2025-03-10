@@ -30,29 +30,6 @@ class PackageUpdater {
     });
   }
 
-  private findAllParents(
-    name: string,
-    packages: Package[]
-  ): Record<string, Package> {
-    const visited: Record<string, boolean> = {};
-    const result: Record<string, Package> = {};
-
-    const visit = (pkgName: string) => {
-      if (visited[pkgName]) return;
-      visited[pkgName] = true;
-
-      for (const pkg of packages) {
-        if (pkg.dependencies.hasOwnProperty(pkgName)) {
-          result[pkg.package_name] = pkg;
-          visit(pkg.package_name);
-        }
-      }
-    };
-
-    visit(name);
-    return result;
-  }
-
   public async bumpParents(packageName: string, newVersion: string) {
     try {
       const packages = await this.packageBuilder.getPackages();

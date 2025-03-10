@@ -1,5 +1,4 @@
 import { SQSEvent, SQSRecord, Context } from 'aws-lambda'
-import DependencyStore from './dependency_store.js'
 import PackageUpdater from './package_updater.js'
 import { loadSecrets } from '@seccl/aws-utils'
 import secrets from '../secrets-config.json' with { type: 'json' }
@@ -12,11 +11,6 @@ const ERROR_MESSAGES = {
   INVALID_MESSAGE_BODY: 'Invalid SQS message body format'
 } as const
 
-const REQUEST_TYPES = {
-  STORE_DEPENDENCY: 'store_dependency',
-  BUMP_PARENTS: 'bump_parents'
-} as const
-
 /**
  * Validates the required environment variables and ensures they are set.
  * Throws an error if any required environment variable is missing.
@@ -25,7 +19,7 @@ const REQUEST_TYPES = {
  * @return {string} return.DYNAMODB_TABLE The name of the DynamoDB table.
  * @return {string} return.GIT_OWNER The Git owner value.
  */
-function validateEnvironment (): { DYNAMODB_TABLE: string, GIT_OWNER: string } {
+function validateEnvironment(): { DYNAMODB_TABLE: string, GIT_OWNER: string } {
   const { DYNAMODB_TABLE, GIT_OWNER } = process.env
 
   if (!DYNAMODB_TABLE) {
@@ -48,40 +42,16 @@ function validateEnvironment (): { DYNAMODB_TABLE: string, GIT_OWNER: string } {
  * @param {string} gitOwner - The Git owner name associated with the operation.
  * @return {Promise<{ success: boolean, result: any }>} A promise that resolves to an object indicating success and the result of the operation.
  */
-async function processJob (job: Record<string, any>, tableName: string, gitOwner: string): Promise<{
+async function processJob(job: Record<string, any>, tableName: string, gitOwner: string): Promise<{
   success: boolean,
   result: any
 }> {
   try {
-    if (!job.request_type) {
-      return {
-        success: false,
-        result: { error: ERROR_MESSAGES.MISSING_REQUEST_TYPE }
-      }
-    }
+    const updater = new PackageUpdater(gitOwner)
+    const { package_name, new_version } = job
+    const result = await updater.bumpParents(package_name, new_version)
+    return { success: result.statusCode >= 200 && result.statusCode < 300, result }
 
-    console.log('Processing job:', job.request_type)
-
-    switch (job.request_type) {
-      case REQUEST_TYPES.STORE_DEPENDENCY: {
-        const dependencyStore = new DependencyStore(tableName)
-        const result = await dependencyStore.store(job)
-        return { success: result.statusCode >= 200 && result.statusCode < 300, result }
-      }
-
-      case REQUEST_TYPES.BUMP_PARENTS: {
-        const updater = new PackageUpdater(gitOwner)
-        const { package_name, new_version } = job
-        const result = await updater.bumpParents(package_name, new_version)
-        return { success: result.statusCode >= 200 && result.statusCode < 300, result }
-      }
-
-      default:
-        return {
-          success: false,
-          result: { error: ERROR_MESSAGES.INVALID_REQUEST_TYPE }
-        }
-    }
   } catch (error) {
     console.error('Error processing job:', error)
     return {
@@ -97,7 +67,7 @@ async function processJob (job: Record<string, any>, tableName: string, gitOwner
  * @param {string} body - The message body string to be parsed.
  * @return {Record<string, any> | null} The parsed object if the body is valid JSON, otherwise null.
  */
-function parseMessageBody (body: string): Record<string, any> | null {
+function parseMessageBody(body: string): Record<string, any> | null {
   try {
     return JSON.parse(body)
   } catch (error) {

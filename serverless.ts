@@ -108,6 +108,7 @@ const resources: Resources = {
     DependenciesTable: {
       Type: 'AWS::DynamoDB::Table',
       Properties: {
+        TableName: `${stage}-package-bump-manager`,
         AttributeDefinitions: [
           {
             AttributeName: 'package_name',
@@ -129,7 +130,7 @@ const resources: Resources = {
         DelaySeconds: 0,
         MessageRetentionPeriod: messageRetentionPeriod,
         VisibilityTimeout: 1800,
-        QueueName: `${stage}-package-bump-manager-event-queue`,
+        QueueName: `${stage}-package-bump-manager`,
         RedrivePolicy: {
           maxReceiveCount: 1,
           deadLetterTargetArn: {
@@ -144,7 +145,7 @@ const resources: Resources = {
         DelaySeconds: 0,
         MessageRetentionPeriod: messageRetentionPeriod,
         VisibilityTimeout: 30,
-        QueueName: `${stage}-package-bump-manager-event-dlq`
+        QueueName: `${stage}-package-bump-manager-dlq`
       }
     }
   }
