@@ -1,91 +1,68 @@
 import semver from "semver";
-import { PackageBuilder } from "./package_builder.js";
 import { createPackageUpdatePR } from './pr-creator.js'
+import {
+  DynamoDBClient,
+  ScanCommand,
+  ScanCommandOutput
+} from '@aws-sdk/client-dynamodb'
+import { Job } from "./types/job.js";
 
 type Package = {
   package_name: string;
+  package_path: string;
   repo_name: string;
   dependencies: Record<string, string>;
-  dev_dependencies: Record<string, string>;
+  is_workspace: boolean;
 };
 
-class PackageUpdater {
-  private readonly owner: string;
-  private packageBuilder: PackageBuilder;
 
-  constructor(owner: string) {
-    this.owner = owner;
-    this.packageBuilder = new PackageBuilder();
+export async function bumpParents(job: Job, parents: Package[], gitOwner: string) {
+  if (parents.length === 0) {
+    console.log("No parent dependencies found that need an update.");
+    return;
   }
 
-  private findParents(name: string, version: string, packages: Package[]): Package[] {
-    return packages.filter((pkg) => {
-      const depVersion = pkg.dependencies[name];
-      const devDepVersion = pkg.dev_dependencies[name];
+  const prResults: { repo: string; prUrl?: string; error?: string }[] = [];
 
-      return (
-        (depVersion && semver.gt(version, depVersion)) ||
-        (devDepVersion && semver.gt(version, devDepVersion))
-      );
+  const { updated_package_name, updated_package_version } = job;
+
+  for (const parent of parents) {
+    const repoName = parent.repo_name;
+    const prUrl = await createPackageUpdatePR({
+      owner: gitOwner,
+      repo: repoName,
+      packageName: updated_package_name,
+      newVersion: updated_package_version,
     });
-  }
-
-  public async bumpParents(packageName: string, newVersion: string) {
-    try {
-      const packages = await this.packageBuilder.getPackages();
-      console.log("Packages:", packages);
-
-      const prTargets = this.findParents(
-        packageName,
-        newVersion,
-        packages
-      );
-      console.log("PR Targets:", prTargets);
-
-      if (prTargets.length === 0) {
-        return {
-          statusCode: 200,
-          body: JSON.stringify({
-            message: "No parent dependencies found that need an update.",
-          }),
-        };
-      }
-
-      const prResults: { repo: string; prUrl?: string; error?: string }[] = [];
-
-      for (const prTarget of prTargets) {
-        const repoName = prTarget.repo_name;
-        try {
-          const prUrl = await createPackageUpdatePR({
-            owner: this.owner,
-            repo: repoName,
-            packageName,
-            newVersion,
-          });
-          console.log("PR created successfully:", prUrl);
-          prResults.push({ repo: repoName, prUrl });
-        } catch (error) {
-          console.error(`Error creating PR for ${repoName}:`, error);
-          prResults.push({ repo: repoName, error: (error as Error).message });
-        }
-      }
-      return {
-        statusCode: 200,
-        body: JSON.stringify({
-          message: "PR creation process completed.",
-          results: prResults,
-        }),
-      };
-    } catch (error) {
-      console.error("Error:", error);
-      return {
-        statusCode: 500,
-        body: JSON.stringify({
-          error: (error as Error).message || "Unknown error occurred.",
-        }),
-      };
-    }
+    console.log("PR created successfully:", prUrl);
+    prResults.push({ repo: repoName, prUrl });
   }
 }
-export default PackageUpdater;
 
+export async function getPackages(tableName: string) {
+  const client = new DynamoDBClient({ region: "eu-west-1" });
+
+  const scanCommand = new ScanCommand({
+    TableName: tableName,
+  });
+
+  const result: ScanCommandOutput = await client.send(scanCommand);
+
+  return result.Items?.map(item => {
+    return {
+      package_name: item["package_name"]?.S || "",
+      package_path: item["package_path"]?.S || "",
+      repo_name: item["repo_name"]?.S || "",
+      dependencies: JSON.parse(item["dependencies"]?.S || "{}"),
+      is_workspace: item["is_workspace"]?.BOOL || false
+    };
+  }) || [];
+}
+
+export function findParents(packages: Package[], job: Job) {
+  const { updated_package_name, updated_package_version } = job;
+  return packages.filter((pkg) => {
+    const depVersion = pkg.dependencies[updated_package_name];
+    return depVersion && semver.gt(updated_package_version, depVersion)
+  })
+}

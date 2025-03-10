@@ -84,6 +84,7 @@ const provider: Provider = {
             'dynamodb:GetItem',
             'dynamodb:PutItem',
             'dynamodb:UpdateItem',
+            'dynamodb:Scan',
           ],
           Resource: { 'Fn::GetAtt': ['DependenciesTable', 'Arn'] },
         },

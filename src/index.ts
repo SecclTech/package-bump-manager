@@ -1,7 +1,8 @@
 import { SQSEvent, SQSRecord, Context } from 'aws-lambda'
-import PackageUpdater from './package_updater.js'
+import { bumpParents, findParents, getPackages } from './package_updater.js'
 import { loadSecrets } from '@seccl/aws-utils'
 import secrets from '../secrets-config.json' with { type: 'json' }
+import { Job } from './types/job.js'
 
 const ERROR_MESSAGES = {
   MISSING_TABLE: 'Internal server error: Missing DYNAMODB_TABLE environment variable',
@@ -33,31 +34,27 @@ function validateEnvironment(): { DYNAMODB_TABLE: string, GIT_OWNER: string } {
   return { DYNAMODB_TABLE, GIT_OWNER }
 }
 
+
 /**
  * Processes a job based on the provided request type. Handles different actions
  * such as storing a dependency or bumping parent versions, depending on the input job.
  *
- * @param {Record<string, any>} job - The job object containing the request type and associated data.
+ * @param {Job[]} jobs - The job object containing the request type and associated data.
  * @param {string} tableName - The name of the table used for storing data.
  * @param {string} gitOwner - The Git owner name associated with the operation.
- * @return {Promise<{ success: boolean, result: any }>} A promise that resolves to an object indicating success and the result of the operation.
  */
-async function processJob(job: Record<string, any>, tableName: string, gitOwner: string): Promise<{
-  success: boolean,
-  result: any
-}> {
-  try {
-    const updater = new PackageUpdater(gitOwner)
-    const { package_name, new_version } = job
-    const result = await updater.bumpParents(package_name, new_version)
-    return { success: result.statusCode >= 200 && result.statusCode < 300, result }
+async function processJob(jobs: Job[], tableName: string, gitOwner: string) {
+  // Fetch all packages from DynamoDB
+  const packages = await getPackages(tableName);
+  console.log("All packages:", packages);
 
-  } catch (error) {
-    console.error('Error processing job:', error)
-    return {
-      success: false,
-      result: { error: error instanceof Error ? error.message : 'Unknown error' }
-    }
+  for (const job of jobs) {
+    // Find all parent packages for the updated package
+    const parents = findParents(packages, job);
+    console.log(`${job.updated_package_name} parents:`, parents);
+
+    // Increment the version of parent packages by creating PR's
+    bumpParents(job, parents, gitOwner);
   }
 }
 
