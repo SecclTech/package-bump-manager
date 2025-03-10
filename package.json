@@ -1,28 +1,41 @@
 {
-  "name": "package-bump-manager",
+  "name": "@seccl/package-bump-manager",
   "version": "1.0.0",
-  "main": "src/index.ts",
   "type": "module",
+  "main": "src/index.ts",
   "scripts": {
-    "start": "tsc && node dist/harness.js",
-    "build": "tsc",
-    "test": "jest",
-    "deploy": "tsc && sls deploy"
+    "local": "npm run build && node src/harness.js",
+    "build": "tsc --build",
+    "clean": "tsc --build --clean",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js\n",
+    "predeploy": "npm run clean && npm run build",
+    "deploy": "if [ -z ${STAGE_ENV} ]; then echo \"STAGE_ENV not set\"; else serverless deploy --config serverless.config.mjs --stage $STAGE_ENV; fi"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@aws-sdk/client-dynamodb": "^3.744.0",
+    "@aws-sdk/client-dynamodb": "^3.758.0",
+    "@seccl/serverless-utils": "^2.4.0",
     "@types/aws-lambda": "^8.10.147",
     "@types/jest": "^29.5.14",
+    "@types/semver": "^7.5.8",
     "jest": "^29.7.0",
-    "ts-jest": "^29.2.5",
-    "typescript": "^5.7.3",
-    "serverless": "^3.0.0"
+    "serverless": "^3.40.0",
+    "serverless-plugin-datadog": "^5.83.0",
+    "ts-jest": "^29.2.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
   },
   "dependencies": {
     "@octokit/auth-app": "^7.1.5",
-    "@octokit/rest": "^21.0.0"
+    "@octokit/plugin-retry": "^7.1.4",
+    "@octokit/plugin-throttling": "^9.4.0",
+    "@octokit/rest": "^21.1.1",
+    "@seccl/aws-utils": "^6.2.1",
+    "semver": "^7.7.1"
+  },
+  "volta": {
+    "node": "22.14.0"
   }
 }

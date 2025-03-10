@@ -1,15 +1,23 @@
 {
   "compilerOptions": {
-    "target": "es2016",
+    "target": "ES2022",
     "module": "nodenext",
+    "moduleResolution": "nodenext",
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    "rootDir": ".",
     "strict": true,
     "skipLibCheck": true,
-    "outDir": "./dist",
-    "rootDir": "./src"
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "serverless/aws": ["./node_modules/@types/serverless/aws.d.ts"]
+    }
   },
   "include": [
-    "src/**/*.ts"
-  ]
+    "*.ts",
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
 }

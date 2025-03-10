@@ -3,3 +3,10 @@ dist/
 .build/
 .serverless/
 .env
+/test/test-npm-env/
+/test/storage/
+/test/htpasswd
+*/**/*.js
+*/**/*.d.ts
+/tsconfig.tsbuildinfo
+/serverless.js
