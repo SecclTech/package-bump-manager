@@ -8,7 +8,11 @@
     "strict": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "serverless/aws": ["./node_modules/@types/serverless/aws.d.ts"]
+    }
   },
   "include": [
     "*.ts",

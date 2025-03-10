@@ -8,8 +8,8 @@
     "build": "tsc --build",
     "clean": "tsc --build --clean",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js\n",
-    "predeploy": "npm run clean && npm ci && npm run build",
-    "deploy": "serverless deploy"
+    "predeploy": "npm run clean && npm run build",
+    "deploy": "serverless deploy -c serverless.config.mjs"
   },
   "author": "",
   "license": "ISC",
@@ -33,7 +33,9 @@
     "@octokit/plugin-throttling": "^9.4.0",
     "@octokit/rest": "^21.1.1",
     "@seccl/aws-utils": "^6.2.1",
-    "@serverless/typescript": "^3.38.0",
     "semver": "^7.7.1"
+  },
+  "volta": {
+    "node": "22.14.0"
   }
 }

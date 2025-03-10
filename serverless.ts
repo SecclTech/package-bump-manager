@@ -6,6 +6,7 @@ import type {
   Package,
   Resources
 } from 'serverless/aws';
+
 import {
   buildServerless,
   standardSecretsIamRoleStatements,
@@ -21,8 +22,8 @@ if (!process.env.STAGE_ENV) {
   throw new Error('STAGE_ENV must be set!');
 }
 
-const packageJson = require('./package.json');
-const secrets: string[] = require('./secrets-config.json');
+import packageJson from './package.json' with { type: 'json' }
+import secrets from './secrets-config.json' with { type: 'json' }
 
 const stage = process.env.STAGE_ENV;
 const coreEnv: string = process.env.CORE_ENV ?? 'genshared';
@@ -187,7 +188,7 @@ const custom = {
   }
 }
 
-export const serverless: Serverless = {
+const serverless: Serverless = {
   service: serviceName,
   provider,
   functions,
@@ -197,4 +198,4 @@ export const serverless: Serverless = {
   custom
 };
 
-module.exports = buildServerless(serverless);
+export default buildServerless(serverless);
