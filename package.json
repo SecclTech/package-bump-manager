@@ -9,7 +9,7 @@
     "clean": "tsc --build --clean",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js\n",
     "predeploy": "npm run clean && npm run build",
-    "deploy": "serverless deploy -c serverless.config.mjs"
+    "deploy": "if [ -z ${STAGE_ENV} ]; then echo \"STAGE_ENV not set\"; else serverless deploy --config serverless.config.mjs --stage $STAGE_ENV; fi"
   },
   "author": "",
   "license": "ISC",

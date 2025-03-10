@@ -101,15 +101,7 @@ const functions: Functions = {
     environment: {
       DYNAMODB_TABLE: { Ref: 'DependenciesTable' },
       GIT_OWNER: 'seccl-platform-test',
-    },
-    events: [
-      {
-        http: {
-          path: 'hello',
-          method: 'get',
-        },
-      },
-    ],
+    }
   },
 };
 const resources: Resources = {
@@ -170,9 +162,11 @@ const pkg: Package = {
     'legacy/*.js',
     'legacy/**/*.js',
     'processor/*.js',
+    'package.json',
     'secrets-config.json',
     'node_modules/**/*.js',
     'node_modules/**/*.cjs',
+    'node_modules/**/*.mjs',
     'node_modules/**/*.json',
     '!node_modules/@types',
     ...standardPatterns

@@ -9,3 +9,4 @@ dist/
 */**/*.js
 */**/*.d.ts
 /tsconfig.tsbuildinfo
+/serverless.js

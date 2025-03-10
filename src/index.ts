@@ -2,6 +2,7 @@ import { SQSEvent, SQSRecord, Context } from 'aws-lambda'
 import DependencyStore from './dependency_store.js'
 import PackageUpdater from './package_updater.js'
 import { loadSecrets } from '@seccl/aws-utils'
+import secrets from '../secrets-config.json' with { type: 'json' }
 
 const ERROR_MESSAGES = {
   MISSING_TABLE: 'Internal server error: Missing DYNAMODB_TABLE environment variable',
@@ -127,7 +128,6 @@ function parseMessageBody (body: string): Record<string, any> | null {
 export const handler = async (event: SQSEvent, _context: Context): Promise<{
   batchItemFailures: Array<{ itemIdentifier: string }>
 }> => {
-  const secrets = require('../secrets-config.json')
   await loadSecrets(secrets)
 
   const failedMessageIds: string[] = []
