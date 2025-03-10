@@ -4,7 +4,7 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "start": "npm run build && node dist/harness.js",
+    "local": "npm run build && node src/harness.js",
     "build": "tsc --build",
     "clean": "tsc --build --clean",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js\n",

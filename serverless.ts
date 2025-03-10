@@ -100,7 +100,6 @@ const functions: Functions = {
     memorySize: 10240,
     environment: {
       DYNAMODB_TABLE: { Ref: 'DependenciesTable' },
-      GIT_OWNER: 'seccl-platform-test',
     }
   },
 };
@@ -154,14 +153,8 @@ const resources: Resources = {
 const pkg: Package = {
   patterns: [
     '!**',
-    'index.js',
-    'lambda.js',
     'src/*.js',
     'src/**/*.js',
-    'lambda/**/*.js',
-    'legacy/*.js',
-    'legacy/**/*.js',
-    'processor/*.js',
     'package.json',
     'secrets-config.json',
     'node_modules/**/*.js',

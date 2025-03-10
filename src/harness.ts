@@ -1,17 +1,8 @@
 import { Context, SQSEvent } from 'aws-lambda'
 import { handler } from './index.js';
 
-const events: any = {
-  request_type: 'store_dependency',
-  package_name: "@seccl/foo",
-  repository: "foo",
-  dependencies: {
-    dependencies: {
-      p1: "1.0.0",
-      ["@seccl/p2"]: "0.5.0",
-    }
-  },
-  is_workspace: false
+const events: SQSEvent = {
+  Records: []
 };
 
 const context: Context = {
