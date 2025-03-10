@@ -1,12 +1,15 @@
 {
   "name": "@seccl/package-bump-manager",
   "version": "1.0.0",
+  "type": "module",
   "main": "src/index.ts",
   "scripts": {
     "start": "npm run build && node dist/harness.js",
     "build": "tsc --build",
+    "clean": "tsc --build --clean",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js\n",
-    "deploy": "npm run build && serverless deploy"
+    "predeploy": "npm run clean && npm ci && npm run build",
+    "deploy": "serverless deploy"
   },
   "author": "",
   "license": "ISC",

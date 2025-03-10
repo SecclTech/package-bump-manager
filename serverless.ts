@@ -48,9 +48,9 @@ const environmentVars: Environment = {
 
 const provider: Provider = {
   name: 'aws',
-  stage: stage,
-  runtime: runtime,
-  region: region,
+  stage,
+  runtime,
+  region,
   environment: environmentVars,
   deploymentBucket: {
     name: `tech.seccl.${region}.${coreEnv}.serverless-deploys`
@@ -94,6 +94,7 @@ const provider: Provider = {
 const functions: Functions = {
   service: {
     handler: 'src/index.handler',
+    runtime,
     timeout: 30,
     memorySize: 10240,
     environment: {
@@ -149,7 +150,7 @@ const resources: Resources = {
       Type: 'AWS::SQS::Queue',
       Properties: {
         DelaySeconds: 0,
-        MessageRetentionPeriod: 1209600,
+        MessageRetentionPeriod: messageRetentionPeriod,
         VisibilityTimeout: 30,
         QueueName: `${stage}-package-bump-manager-event-dlq`
       }

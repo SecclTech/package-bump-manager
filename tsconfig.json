@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "rootDir": ".",
     "strict": true,
@@ -11,6 +11,7 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": [
+    "*.ts",
     "src/**/*.ts",
     "test/**/*.ts"
   ],
